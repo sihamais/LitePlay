@@ -7,6 +7,7 @@ from sysctl import SysctlModule
 from template import TemplateModule
 from enum import Enum
 
+
 class Status(Enum):
     OK = "OK"
     KO = "KO"

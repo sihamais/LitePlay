@@ -1,5 +1,6 @@
 from ssh.ssh_client import SSHClient
 
+
 class BaseModule:
     name: str = "anonymous"
 

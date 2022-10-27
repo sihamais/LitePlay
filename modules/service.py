@@ -12,7 +12,11 @@ class ServiceModule(BaseModule):
         "started": {"check": "is-active", "expected": "active", "action": "start"},
         "stopped": {"check": "is-active", "expected": "inactive", "action": "stop"},
         "enabled": {"check": "is-enabled", "expected": "enabled", "action": "enable"},
-        "disabled": {"check": "is-enabled", "expected": "disabled", "action": "disable"},
+        "disabled": {
+            "check": "is-enabled",
+            "expected": "disabled",
+            "action": "disable",
+        },
         "restarted": {"action": "restart"},
     }
 
@@ -48,7 +52,8 @@ class ServiceModule(BaseModule):
                 status = Status.CHANGED
 
         cmd = str.format(
-            "sudo systemctl %s %s.service", stateInfo[self.params["state"]
-                                                      ]["action"], self.params["name"]
+            "sudo systemctl %s %s.service",
+            stateInfo[self.params["state"]]["action"],
+            self.params["name"],
         )
         return cmd, status

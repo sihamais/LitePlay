@@ -4,8 +4,9 @@ from ssh.ssh_client import SSHClient
 class BaseModule:
     name: str = "anonymous"
 
-    def __init__(self, params: dict):
+    def __init__(self, params: dict, task_number: int):
         self.params = params
+        self.task_number
 
     def process(self, ssh_client: SSHClient):
         """Apply the action to `ssh_client` using `params`."""

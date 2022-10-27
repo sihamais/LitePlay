@@ -25,12 +25,27 @@ class ServiceModule(BaseModule):
         command, status = self.diff(ssh_client)
         if status is Status.CHANGED:
             remote.run_cmd(command, ssh_client)
+            logging.info("[%d][CHANGED] %s", self.task_number, command)
+        else:
+            logging.info(
+                "[%d][OK] Service %s %s",
+                self.task_number,
+                self.params["name"],
+                self.params["state"],
+            )
 
     def dry(self, ssh_client):
         """Display the action that would be applied to `ssh_client`."""
         command, status = self.diff(ssh_client)
         if status is Status.CHANGED:
-            logging.info("[CHANGED] %s", command)
+            logging.info("[%d][CHANGED] %s", self.task_number, command)
+        else:
+            logging.info(
+                "[%d][OK] Service %s %s",
+                self.task_number,
+                self.params["name"],
+                self.params["state"],
+            )
 
     def diff(self, ssh_client) -> str:
         """Check the difference between the actual state of the server and the changes to be applied."""

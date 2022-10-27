@@ -1,8 +1,8 @@
 import click
 import logging
-import Utils
+import utils
 
-loggingFormat = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+loggingFormat: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 
 @click.command()
@@ -11,6 +11,8 @@ loggingFormat = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 @click.option("--dry-run", is_flag=True)
 @click.option("--debug", is_flag=True)
 def cli(f, i, dry_run, debug):
+    """Run the CLI."""
+
     if debug:
         loggingLevel = logging.DEBUG
     else:
@@ -18,12 +20,13 @@ def cli(f, i, dry_run, debug):
 
     logging.basicConfig(format=loggingFormat, level=loggingLevel)
 
-    todos = Utils.YamlHandler.read(f)
-    inventory = Utils.YamlHandler.read(i)
+    todos: dict = utils.yaml_handler.read(f)
+    inventory: dict = utils.yaml_handler.read(i)
 
-    ssh_addresses = []
+    ssh_addresses: list = []
     for key in inventory["hosts"]:
         ssh_addresses.append(inventory["hosts"][key]["ssh_address"])
 
-    logging.info("processing %d tasks on hosts: %s",
-                 len(todos), " ".join(ssh_addresses))
+    logging.info(
+        "processing %d tasks on hosts: %s", len(todos), " ".join(ssh_addresses)
+    )

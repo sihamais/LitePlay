@@ -5,8 +5,8 @@ setup(
     version="1.0.0",
     packages=(
         find_packages()
-        + find_packages(where="./Utils")
-        + find_packages(where="./Modules")
+        + find_packages(where="./utils")
+        + find_packages(where="./modules")
     ),
     include_package_data=True,
     install_requires=[

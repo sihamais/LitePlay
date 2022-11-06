@@ -1,25 +1,25 @@
 - module: apt
   params:
-    name: nginx-common
-    state: present
+    name: curl
+    state: absent
 
-- module: copy
-  params:
-    src: ./public
-    dest: /var/www/public
-    backup: true
+# - module: copy
+#   params:
+#     src: ./public
+#     dest: /var/www/public
+#     backup: true
 
-- module: template
-  params:
-    src: default.conf.j2
-    dest: /etc/nginx/sites-enabled/default
-
-- module: service
-  params:
-    name: nginx
-    state: started
+# - module: template
+#   params:
+#     src: default.conf.j2
+#     dest: /etc/nginx/sites-enabled/default
 
 - module: service
   params:
     name: nginx
-    state: enabled
+    state: disabled
+
+# - module: service
+#   params:
+#     name: nginx
+#     state: enabled

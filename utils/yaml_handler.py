@@ -3,7 +3,7 @@ import logging
 import click
 
 
-def read(file: click.File()) -> Any:
+def read(file: click.File()):
     """Read YAML file content and returns it."""
     try:
         data = yaml.safe_load(file)

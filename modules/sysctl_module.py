@@ -1,8 +1,11 @@
 from utils.ssh import SSHClient
-from . import BaseModule
+from utils.cmd_result import CmdResult
+from modules.base_module import BaseModule
+import logging
 
 # read valeur: sysctl -n dev.raid.speed_limit_max -> 2000
 # set valeur: sysctl dev.raid.speed_limit_max=300
+# sysctl --system | grep x | rev | cut -d " " -f 1 | rev
 
 
 class SysctlModule(BaseModule):
@@ -13,45 +16,26 @@ class SysctlModule(BaseModule):
         "action": "=",
     }
 
-    def apply(self, ssh_client: SSHClient):
-        """Apply the action to `ssh_client` using `params`."""
-        command, status = self.diff(ssh_client)
-        if status is Status.CHANGED:
-            ssh_client.run(command)
-            logging.info("[%d][CHANGED] %s", self.task_number, command)
-        else:
-            logging.info(
-                "[%d][OK] Sysctl %s %s",
-                self.task_number,
-                self.params["name"],
-                self.params["state"],
-            )
+    def _info(self):
+        """Display information on the task."""
+        logging.info(
+            "[%d] host=%s op=%s name=%s attribute=%s value=%s permanent=%s",
+            self.task_number,
+            self.host,
+            self.name,
+            self.params["attribute"],
+            self.params["value"],
+            self.params["permanent"],
+        )
 
-    def dry(self, ssh_client: SSHClient):
-        """Display the action that would be applied to `ssh_client`."""
-        command, status = self.diff(ssh_client)
-        if status is Status.CHANGED:
-            logging.info("[%d][CHANGED] %s", self.task_number, command)
-        else:
-            logging.info(
-                "[%d][OK] Sysctl %s %s %s",
-                self.task_number,
-                self.params["attribute"],
-                self.valueInfo["action"],
-                self.params["value"],
-            )
-
-    def diff(self, ssh_client: SSHClient) -> str:
+    def _diff(self, ssh_client: SSHClient) -> str:
         """Check the difference between the actual state of the server and the changes to be applied."""
-        status: str
-
         check = f'sudo sysctl {self.stateInfo["check"]} {self.params["attribute"]}'
         result: CmdResult = ssh_client.run(check)
 
         if result.stdout.read() == self.params["value"]:
-            status = Status.OK
+            self.status = Status.OK
         else:
-            status = Status.CHANGED
+            self.status = Status.CHANGED
 
-        cmd = f'sudo sysctl {self.params["attribute"]}{self.stateInfo["action"]}{self.params["value"]}'
-        return cmd, status
+        return f'sudo sysctl {self.params["attribute"]}{self.stateInfo["action"]}{self.params["value"]}'

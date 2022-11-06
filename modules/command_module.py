@@ -1,25 +1,39 @@
 from utils.ssh import SSHClient
-from utils import remote
-from . import BaseModule
+from utils.cmd_result import CmdResult
+from modules.base_module import BaseModule
+import logging
 
 
 class CommandModule(BaseModule):
     name: str = "command"
 
-    def __init__(self, params: dict, task_number: int):
+    def __init__(self, params: dict, task_number: int, host: str):
         if params["shell"] is None:
             params["shell"] = "/bin/bash"
-        super().__init__(params, task_number)
+        super().__init__(params, task_number, host)
 
-    def apply(self, ssh_client: SSHClient):
-        if self.params["shell"] != "/bin/bash":
-            tmp = ssh_client.run(f"{self.params['shell']} {self.params['command']}")
-        else:
-            tmp = remote.run_remote_cmd(self.params["command"], ssh_client)
+    def _info(self):
+        """Display information on the task."""
+        logging.info(
+            "[%d] host=%s op=%s cmd=%s shell=%s",
+            self.task_number,
+            self.host,
+            self.name,
+            self.params["command"],
+            self.params["shell"],
+        )
 
-    def dry(self) -> None:
-        """Display the action that would be applied to `ssh_client`."""
-        logging.info("[%d][CHANGED] %s", self.task_number, command)
+    def _dry_info(self, command):
+        """Display information on the command to be applied in dry-run."""
+        logging.info(
+            "[%d] host=%s cmd='%s'",
+            self.task_number,
+            self.host,
+            command,
+        )
 
-    def command(self) -> str:
+    def _diff(self, ssh_client: SSHClient) -> str:
+        """Check the difference between the actual state of the server and the changes to be applied."""
+        self.status = Status.CHANGED
         return f"{self.params['shell']} {self.params['command']}"
+

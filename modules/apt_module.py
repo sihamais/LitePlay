@@ -1,6 +1,7 @@
-from utils.ssh import SSHClient
-from utils.ssh import CmdResult
-from . import BaseModule
+from utils.ssh import SSHClient, CmdResult
+from utils.status import Status
+from modules.base_module import BaseModule
+import logging
 
 
 class AptModule(BaseModule):
@@ -8,51 +9,35 @@ class AptModule(BaseModule):
 
     stateInfo: dict = {
         "present": {"expected": 0, "action": "install"},
-        "absent": {"expected": 1, "action": "remove --purge"},
+        "absent": {"expected": 1, "action": "remove"},
     }
 
-    def __init__(self, params: dict, task_number: int):
+    def __init__(self, params: dict, task_number: int, host: str):
         if params["state"] is None:
             params["state"] = "present"
-        super().__init__(params, task_number)
+        super().__init__(params, task_number, host)
 
-    def apply(self, ssh_client: SSHClient):
-        command, status = self.diff(ssh_client)
-        if status is Status.CHANGED:
-            ssh_client.run(command)
-            logging.info("[%d][CHANGED] %s", self.task_number, command)
-        else:
-            logging.info(
-                "[%d][OK] Package %s %s",
-                self.task_number,
-                self.params["name"],
-                self.params["state"],
-            )
+    def _info(self):
+        """Display information on the task."""
+        logging.info(
+            "[%d] host=%s op=%s name=%s state=%s",
+            self.task_number,
+            self.host,
+            self.name,
+            self.params["name"],
+            self.params["state"],
+        )
 
-    def dry(self, ssh_client: SSHClient):
-        """Display the action that would be applied to `ssh_client`."""
-        command, status = self.diff(ssh_client)
-        if status is Status.CHANGED:
-            logging.info("[%d][CHANGED] %s", self.task_number, command)
-        else:
-            logging.info(
-                "[%d][OK] Package %s %s",
-                self.task_number,
-                self.params["name"],
-                self.params["state"],
-            )
-
-    def diff(self, ssh_client: SSHClient) -> (str, str):
+    def _diff(self, ssh_client: SSHClient) -> str:
         """Check the difference between the actual state of the server and the changes to be applied."""
-        status: str
 
-        check = f"dpkg -l {self.params['name']}"
-        result: CmdResult = ssh_client.run(check, ssh_client)
+        check = f"sudo dpkg -s {self.params['name']}"
+        result: CmdResult = ssh_client.run(check)
 
         if result.exit_code == self.stateInfo[self.params["state"]]["expected"]:
-            status = Status.OK
+            self.status = Status.OK
         else:
-            status = Status.CHANGED
+            self.status = Status.CHANGED
 
-        cmd = f"sudo apt-get -y {self.stateInfo[self.params['state']]['action']}"
-        return cmd, status
+        return f"sudo apt -y {self.stateInfo[self.params['state']]['action']} {self.params['name']}"
+

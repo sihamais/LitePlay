@@ -1,7 +1,7 @@
-from ssh.ssh_client import SSHClient
+from utils.ssh import SSHClient
+from utils.ssh import CmdResult
 from . import BaseModule
 from . import Status
-from utils import remote
 import logging
 
 
@@ -20,11 +20,11 @@ class ServiceModule(BaseModule):
         "restarted": {"action": "restart"},
     }
 
-    def process(self, ssh_client):
+    def apply(self, ssh_client: SSHClient):
         """Apply the action to `ssh_client` using `params`."""
         command, status = self.diff(ssh_client)
         if status is Status.CHANGED:
-            remote.run_cmd(command, ssh_client)
+            ssh_client.run(command)
             logging.info("[%d][CHANGED] %s", self.task_number, command)
         else:
             logging.info(
@@ -34,7 +34,7 @@ class ServiceModule(BaseModule):
                 self.params["state"],
             )
 
-    def dry(self, ssh_client):
+    def dry(self, ssh_client: SSHClient):
         """Display the action that would be applied to `ssh_client`."""
         command, status = self.diff(ssh_client)
         if status is Status.CHANGED:
@@ -47,28 +47,24 @@ class ServiceModule(BaseModule):
                 self.params["state"],
             )
 
-    def diff(self, ssh_client) -> str:
+    def diff(self, ssh_client: SSHClient) -> str:
         """Check the difference between the actual state of the server and the changes to be applied."""
         status: str
 
         if self.params["state"] == "restarted":
             status = Status.CHANGED
         else:
-            check = str.format(
-                "sudo systemctl %s %s.service",
-                stateInfo[self.params["state"]]["check"],
-                self.params["name"],
+            check = (
+                f'sudo systemctl {self.stateInfo[self.params["state"]]["check"]} {self.params["name"]}.service',
             )
-            output = remote.run_cmd(check, ssh_client)
+            result: CmdResult = ssh_client.run(check)
 
-            if output == stateInfo[self.params["state"]]["expected"]:
+            if result.stdout.read() == self.stateInfo[self.params["state"]]["expected"]:
                 status = Status.OK
             else:
                 status = Status.CHANGED
 
-        cmd = str.format(
-            "sudo systemctl %s %s.service",
-            stateInfo[self.params["state"]]["action"],
-            self.params["name"],
+        cmd = (
+            f'sudo systemctl {self.stateInfo[self.params["state"]]["action"]} {self.params["name"]}.service',
         )
         return cmd, status

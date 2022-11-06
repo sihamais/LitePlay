@@ -1,12 +1,9 @@
-from . import SSH
+class CmdResult:
+    def __init__(self, stdout, stderr, exit_code):
+        self.sdtout = stdout
+        self.stderr = stderr
+        self.exit_code = exit_code
 
-
-def run_cmd(command: str, ssh_client: SSH, config: dict) -> CmdResult:
-    """Execute the `command` remotely using the `SSHClient`.
-
-    The `CmdResult` object will expose the following information:
-    - `CmdResult.stdout`: the standard output of the `command` execution
-    - `CmdResult.stderr`: the error output of the `command` execution
-    - `CmdResult.exit_code`: the exit code of the `command` execution
-    """
-    stdin, stdout, stderr = ssh_client.run(command, shell)
+    def print_cmd(self):
+        for line in self.sdtout.read().splitlines():
+            print(line.decode("utf-8"))

@@ -9,17 +9,32 @@
 #     dest: /var/www/public
 #     backup: true
 
-# - module: template
-#   params:
-#     src: default.conf.j2
-#     dest: /etc/nginx/sites-enabled/default
+- module: template
+  params:
+    src: "default.conf.j2"
+    dest: "/etc/nginx/sites-enabled/default"
+    vars:
+      listen_port: 9000
+      server_name: "_"
+
+- module: command
+  params:
+    command: |
+      echo "test" > /tmp/dummy-file
+      cat /tmp/dummy-file
 
 - module: service
   params:
     name: nginx
     state: disabled
 
-# - module: service
-#   params:
-#     name: nginx
-#     state: enabled
+- module: apt
+  params:
+    name: curl
+    state: present
+
+- module: sysctl
+  params:
+    attribute: "net.core.somaxconn"
+    value: 8192
+    permanent: true

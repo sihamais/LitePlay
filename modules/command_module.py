@@ -1,4 +1,5 @@
 from utils.ssh import SSHClient
+from utils.status import Status
 from utils.cmd_result import CmdResult
 from modules.base_module import BaseModule
 import logging
@@ -8,7 +9,7 @@ class CommandModule(BaseModule):
     name: str = "command"
 
     def __init__(self, params: dict, task_number: int, host: str):
-        if params["shell"] is None:
+        if "shell" not in params:
             params["shell"] = "/bin/bash"
         super().__init__(params, task_number, host)
 
@@ -35,5 +36,4 @@ class CommandModule(BaseModule):
     def _diff(self, ssh_client: SSHClient) -> str:
         """Check the difference between the actual state of the server and the changes to be applied."""
         self.status = Status.CHANGED
-        return f"{self.params['shell']} {self.params['command']}"
-
+        return f"{self.params['shell']} -c '{self.params['command']}'"

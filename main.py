@@ -39,12 +39,12 @@ def cli(f, i, dry_run, debug):
         "processing %d tasks on hosts: %s", len(todos), " ".join(ssh_addresses)
     )
 
-    task_number = 1
     for key in inventory["hosts"]:
         ssh_client = utils.ssh.SSHClient(inventory["hosts"][key])
         ssh_client.authenticate()
         ssh_client.connect()
 
+        task_number = 1
         oks = 0
         kos = 0
         changed = 0
@@ -79,11 +79,12 @@ def cli(f, i, dry_run, debug):
                 oks += 1
             elif module.status is Status.CHANGED:
                 changed += 1
-            else:
+            elif module.status is Status.KO:
                 kos += 1
-                
+
             task_number += 1
 
-        logging.info("host=%s ok=%d changed=%d ko=%d", host, oks, kos, changed)
+        ssh_client.session.close()
+        logging.info("host=%s ok=%d changed=%d ko=%d", host, oks, changed, kos)
 
     logging.info("done processing tasks for hosts: %s", " ".join(ssh_addresses))

@@ -11,9 +11,16 @@ class CmdResult:
         file.read().decode("utf-8")
 
     def log_stdout(self, logger, task_number) -> None:
-        lines = self.stdout.read().decode("utf-8").splitlines()
-        while "" in lines:
-            lines.remove("")
+        stdout_lines = self.stdout.read().decode("utf-8").splitlines()
+        while "" in stdout_lines:
+            stdout_lines.remove("")
 
-        for line in lines:
+        for line in stdout_lines:
+            logger("[%d] %s", task_number, line)
+
+        stderr_lines = self.stderr.read().decode("utf-8").splitlines()
+        while "" in stderr_lines:
+            stderr_lines.remove("")
+
+        for line in stderr_lines:
             logger("[%d] %s", task_number, line)

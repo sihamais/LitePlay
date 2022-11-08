@@ -1,5 +1,6 @@
 from utils.ssh import SSHClient
 from utils.status import Status
+from utils.cmd_result import CmdResult
 import logging
 
 
@@ -45,7 +46,8 @@ class BaseModule:
 
     def _dry_info(self, command):
         """Display information on the command to be applied in dry-run."""
-        logging.info("[%d] host=%s cmd='%s'", self.task_number, self.host, command)
+        if self.status is Status.CHANGED:
+            logging.info("[%d] host=%s cmd='%s'", self.task_number, self.host, command)
 
     def _diff(self, ssh_client: SSHClient) -> str:
         """Check the difference between the actual state of the server and the changes to be applied."""

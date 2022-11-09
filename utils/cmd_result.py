@@ -3,22 +3,25 @@ import logging
 
 class CmdResult:
     def __init__(self, stdout, stderr, exit_code):
-        self.stdout: paramiko.ChannelFile = stdout
-        self.stderr: paramiko.ChannelStderrFile = stderr
+        self._stdout: paramiko.ChannelFile = stdout
+        self._stderr: paramiko.ChannelStderrFile = stderr
         self.exit_code: int = exit_code
 
-    def read(self, file):
-        file.read().decode("utf-8")
+    def stdout(self):
+        return self._stdout.read().decode("utf-8").rstrip()
 
-    def log_stdout(self, logger, task_number) -> None:
-        stdout_lines = self.stdout.read().decode("utf-8").splitlines()
+    def stderr(self):
+        return self._stderr.read().decode("utf-8").rstrip()
+
+    def log_output(self, logger, task_number):
+        stdout_lines = self.stdout().splitlines()
         while "" in stdout_lines:
             stdout_lines.remove("")
 
         for line in stdout_lines:
             logger("[%d] %s", task_number, line)
 
-        stderr_lines = self.stderr.read().decode("utf-8").splitlines()
+        stderr_lines = self.stderr().splitlines()
         while "" in stderr_lines:
             stderr_lines.remove("")
 

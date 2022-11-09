@@ -46,7 +46,7 @@ class SSHClient:
                 hostname=self.params["ssh_address"], port=self.params["ssh_port"]
             )
 
-    def run(self, command: str) -> CmdResult:
+    def run(self, command):
         """Run a command inside the SSH server."""
         stdin, stdout, stderr = self.session.exec_command(command)
         return CmdResult(stdout, stderr, stdout.channel.recv_exit_status())

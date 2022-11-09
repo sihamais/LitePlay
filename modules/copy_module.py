@@ -20,20 +20,6 @@ class CopyModule(BaseModule):
         self.upload_dir(self.params["src"], self.params["dest"], sftp_client)
         sftp_client.close()
 
-    def dry(self, ssh_client: SSHClient):
-        """Display the action that would be applied to `ssh_client`."""
-        command, status = self.diff(ssh_client)
-        if status is Status.CHANGED:
-            logging.info("[%d][CHANGED] %s", self.task_number, command)
-        else:
-            logging.info(
-                "[%d][OK] %s %s %s",
-                self.task_number,
-                self.name,
-                self.params["name"],
-                self.params["state"],
-            )
-
     def diff(self, ssh_client: SSHClient):
         pass
 

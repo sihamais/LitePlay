@@ -28,10 +28,10 @@ class AptModule(BaseModule):
             self.params["state"],
         )
 
-    def _diff(self, ssh_client: SSHClient) -> str:
+    def _diff(self, ssh_client: SSHClient):
         """Check the difference between the actual state of the server and the changes to be applied."""
 
-        check = f"sudo dpkg -s {self.params['name']}"
+        check = f"dpkg -s {self.params['name']}"
         result: CmdResult = ssh_client.run(check)
 
         if result.exit_code == self.stateInfo[self.params["state"]]["expected"]:
@@ -39,5 +39,5 @@ class AptModule(BaseModule):
         else:
             self.status = Status.CHANGED
 
-        return f"sudo apt -y {self.stateInfo[self.params['state']]['action']} {self.params['name']}"
+        return f"apt -y {self.stateInfo[self.params['state']]['action']} {self.params['name']}"
 

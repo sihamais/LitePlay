@@ -26,9 +26,11 @@ class BaseModule:
     def dry(self, ssh_client: SSHClient):
         """Display the action that would be applied to `ssh_client`."""
         self._info()
+
         command = self._diff(ssh_client)
-        if self.status is not Status.KO:
+        if self.status is Status.CHANGED:
             self._dry_info(command)
+
         self._status()
 
     def _info(self):
@@ -46,10 +48,9 @@ class BaseModule:
 
     def _dry_info(self, command):
         """Display information on the command to be applied in dry-run."""
-        if self.status is Status.CHANGED:
-            logging.info("[%d] host=%s cmd='%s'", self.task_number, self.host, command)
+        logging.info("[%d] host=%s cmd='%s'", self.task_number, self.host, command)
 
-    def _diff(self, ssh_client: SSHClient) -> str:
+    def _diff(self, ssh_client: SSHClient):
         """Check the difference between the actual state of the server and the changes to be applied."""
 
     def _process(self, ssh_client, command):
@@ -57,4 +58,7 @@ class BaseModule:
         result: CmdResult = ssh_client.run(command)
         if result.exit_code != 0:
             self.status = Status.KO
-            result.log_stdout(logging.debug, self.task_number)
+            result.log_output(logging.debug, self.task_number)
+
+    def _debug_log(self, msg):
+        logging.debug("[%d] %s", self.task_number, msg)

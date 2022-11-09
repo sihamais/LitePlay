@@ -33,7 +33,7 @@ class CommandModule(BaseModule):
             command,
         )
 
-    def _diff(self, ssh_client: SSHClient) -> str:
+    def _diff(self, ssh_client: SSHClient):
         """Check the difference between the actual state of the server and the changes to be applied."""
         self.status = Status.CHANGED
         return f"{self.params['shell']} -c '{self.params['command']}'"

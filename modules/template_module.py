@@ -24,7 +24,7 @@ class TemplateModule(BaseModule):
 
     def _diff(self, ssh_client: SSHClient):
         """Check the difference between the actual state of the server and the changes to be applied."""
-        check = f"sudo cat {self.params['dest']}"
+        check = f"cat {self.params['dest']}"
         result: CmdResult = ssh_client.run(check)
 
         file = open(self.params["src"], "r")
@@ -32,9 +32,11 @@ class TemplateModule(BaseModule):
         tmpl = Template(content)
         rtmpl = tmpl.render(self.params["vars"])
 
-        if result.stdout.read().decode("utf-8").rstrip() == rtmpl:
+        if result.stdout() == rtmpl:
             self.status = Status.OK
         else:
             self.status = Status.CHANGED
             folder = os.path.dirname(self.params["dest"])
-            return f'sudo mkdir -p {folder} && sudo echo "{rtmpl}" > {self.params["dest"]}'
+            return (
+                f'mkdir -p {folder} && echo "{rtmpl}" > {self.params["dest"]}'
+            )

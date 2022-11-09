@@ -61,4 +61,5 @@ class BaseModule:
             result.log_output(logging.debug, self.task_number)
 
     def _debug_log(self, msg):
+        """Display information on the command to be applied in dry-run."""
         logging.debug("[%d] %s", self.task_number, msg)

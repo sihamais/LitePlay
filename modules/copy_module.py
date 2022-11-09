@@ -29,9 +29,11 @@ class CopyModule(BaseModule):
         """Apply the action to `ssh_client` using `params`."""
         self._info()
 
-        command = self._diff(ssh_client)
+        self._diff(ssh_client)
         if self.status is Status.CHANGED:
             self._process(ssh_client)
+
+        self._status()
 
     def dry(self, ssh_client: SSHClient):
         """Display the action that would be applied to `ssh_client`."""
@@ -43,7 +45,7 @@ class CopyModule(BaseModule):
         # if src is a directory
         if os.path.isdir(f'{self.params["src"]}'):
 
-            # Check that the directory exists, compress dest and hash the zip
+            # Check that the directory exists and hash content to compare to local
             check = f'test -d {self.params["dest"]} && find {self.params["dest"]} -type f -print0 | xargs -0 sha1sum  | cut -d " " -f 1 | sort -z | sha1sum'
             result = ssh_client.run(check)
 
@@ -51,11 +53,14 @@ class CopyModule(BaseModule):
             if result.exit_code != 0:
                 self.status = Status.CHANGED
             else:
+
+                # Hash content of local directory to compare to remote one
                 check = f'find {self.params["src"]} -type f -print0 | xargs -0 sha1sum  | cut -d " " -f 1 | sort -z | sha1sum'
                 src_hash = (
                     subprocess.check_output(check, shell=True).decode("utf-8").rstrip()
                 )
 
+                # If the hashes match
                 if src_hash == result.stdout():
                     self.status = Status.OK
                 else:
@@ -63,6 +68,8 @@ class CopyModule(BaseModule):
 
         # if src is a file
         else:
+
+            # Check that the file exists and hash content to compare to local
             check = f"test -e {self.params['dest']} && sha1sum {self.params['dest']} | cut -d' ' -f 1"
             result = ssh_client.run(check)
 
@@ -74,6 +81,7 @@ class CopyModule(BaseModule):
                     subprocess.check_output(check, shell=True).decode("utf-8").rstrip()
                 )
 
+                # If the hashes match
                 if src_hash == result.stdout():
                     self.status = Status.OK
                 else:
@@ -92,15 +100,17 @@ class CopyModule(BaseModule):
     def _upload_dir(self, ssh_client):
         sftp_client = ssh_client.session.open_sftp()
 
-        src_tar = f"{os.path.basename(self.params['src'])}.tar.gz"
-        dest_tar = f"{os.path.basename(self.params['dest'])}.tar.gz"
+        src_tar = (
+            f"{os.path.basename(self.params['src'])}.tar.gz"  # Format tar name for src
+        )
+        dest_tar = f"{os.path.basename(self.params['dest'])}.tar.gz"  # Format tar name for dest
 
         # Tar the local folder
         os.system(f'tar cfz {src_tar} -C {self.params["src"]} .')
 
-        # Before copying, backup the remote destination folder
+        # Before copying, backup the remote destination folder if it exists
         if self.params["backup"]:
-            result: CmdResult = ssh_client.run(
+            ssh_client.run(
                 f'test -d {self.params["dest"]} && mv {self.params["dest"]} {self.params["dest"]}_backup-{uuid.uuid1()}'
             )
 
@@ -122,14 +132,16 @@ class CopyModule(BaseModule):
             file_name = os.path.basename(self.params["dest"])  # Get filename
             tup = os.path.splitext(file_name)  # Get name and extension from filename
 
-            result: CmdResult = ssh_client.run(
+            # Before copying, backup the remote destination file if it exists
+            ssh_client.run(
                 f'test -e {self.params["dest"]} && mv {self.params["dest"]} {folder_name}/{tup[0]}_backup-{uuid.uuid1()}{tup[1]}'
             )
-            if result.exit_code != 0:
-                self.status = Status.KO
-                result.log_output(logging.debug, self.task_number)
 
         sftp_client = ssh_client.session.open_sftp()
+
+        # Create remote dest path if it does not exist
         ssh_client.run(f"mkdir -p {os.path.dirname(self.params['dest'])}")
+
+        # Copy local file to remote dest
         sftp_client.put(self.params["src"], self.params["dest"])
         sftp_client.close()

@@ -23,19 +23,21 @@ class TemplateModule(BaseModule):
 
     def _diff(self, ssh_client: SSHClient):
         """Check the difference between the actual state of the server and the changes to be applied."""
+        # Check if the file at remote destination matches the new one
         check = f"cat {self.params['dest']}"
         result: CmdResult = ssh_client.run(check)
 
         file = open(self.params["src"], "r")
         content: str = "".join(file.readlines())
+
+        # Generate template from source file
         tmpl = Template(content)
         rtmpl = tmpl.render(self.params["vars"])
 
+        # If files match
         if result.stdout() == rtmpl:
             self.status = Status.OK
         else:
             self.status = Status.CHANGED
             folder = os.path.dirname(self.params["dest"])
-            return (
-                f'mkdir -p {folder} && echo "{rtmpl}" > {self.params["dest"]}'
-            )
+            return f'mkdir -p {folder} && echo "{rtmpl}" > {self.params["dest"]}'

@@ -49,19 +49,25 @@ class ServiceModule(BaseModule):
 
     def _diff(self, ssh_client: SSHClient):
         """Check the difference between the actual state of the server and the changes to be applied."""
-        result: CmdResult = self._exists(ssh_client)  # Check if the service exists
+        # Check if the service exists
+        result: CmdResult = self._exists(ssh_client)
 
-        if result.exit_code != 0:  # If the service doesn't exist
+        # If the service doesn't exist
+        if result.exit_code != 0:
             self.status = Status.KO
             self._debug_log(
                 f"Service {self.params['name']} not found on host {self.host}."
             )
             return
-        else:  # If the service exist
+
+        # If the service exist
+        else:
             if self.params["state"] == "restarted":
                 self.status = Status.CHANGED
             else:
-                check = f'systemctl {self.stateInfo[self.params["state"]]["check"]} {self.params["name"]}.service'  # Commmand to check the state of the service (idempotence)
+
+                # Check the state of the service
+                check = f'systemctl {self.stateInfo[self.params["state"]]["check"]} {self.params["name"]}.service'
                 result: CmdResult = ssh_client.run(check)
 
                 if result.stdout() == self.stateInfo[self.params["state"]]["expected"]:
@@ -70,10 +76,13 @@ class ServiceModule(BaseModule):
                 else:
                     self.status = Status.CHANGED
 
-            cmd = f'systemctl {self.stateInfo[self.params["state"]]["action"]} {self.params["name"]}.service'  # Command to execute the action
+            # Command to execute the action
+            cmd = f'systemctl {self.stateInfo[self.params["state"]]["action"]} {self.params["name"]}.service'
             return cmd
 
     def _exists(self, ssh_client: SSHClient):
         """Check if the service exists on the host."""
-        command = f'systemctl list-unit-files | grep -Fq "{self.params["name"]}.service"'
+        command = (
+            f'systemctl list-unit-files | grep -Fq "{self.params["name"]}.service"'
+        )
         return ssh_client.run(command)

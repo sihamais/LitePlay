@@ -4,7 +4,6 @@ from utils.status import Status
 from modules.base_module import BaseModule
 from jinja2 import Template
 import logging
-import uuid
 import os
 
 

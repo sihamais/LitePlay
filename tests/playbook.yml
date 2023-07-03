@@ -5,7 +5,7 @@
 
 - module: copy
   params:
-    src: /home/sihamais/Desktop/newFolder
+    src: ~/Desktop/newFolder
     dest: /root/newFolder
     backup: true
 

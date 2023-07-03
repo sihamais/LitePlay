@@ -1,6 +1,0 @@
-hosts:
-    webserver:
-        ssh_address: 5.75.139.188
-        ssh_key_file: "/home/sihamais/.ssh/pipo"
-        ssh_port: 22
-

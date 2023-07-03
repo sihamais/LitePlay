@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="mla",
+    name="liteplay",
     version="1.0.0",
     packages=(
         find_packages()
@@ -14,7 +14,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "mla = main:cli",
+            "liteplay = main:cli",
         ],
     },
 )
